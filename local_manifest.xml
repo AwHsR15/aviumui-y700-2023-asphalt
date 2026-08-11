@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lenovo Legion Y700 2023 (TB320FC / codename "asphalt")
+  Device tree manifest for building AviumUI (or plain LineageOS 23.2).
+
+  Usage:
+    repo init -u https://github.com/AviumUI/android_manifests -b avium-16.2 --git-lfs
+    mkdir -p .repo/local_manifests
+    cp local_manifest.xml .repo/local_manifests/
+    repo sync -c -j8 --no-clone-bundle --no-tags
+
+  Device tree & kernel maintained by lolipuru:
+    https://github.com/lolipuru
+  All credit for device support goes to them. This manifest just points
+  repo at the right repos/branch.
+-->
+<manifest>
+  <remote name="lolipuru"
+          fetch="https://github.com/lolipuru"
+          revision="lineage-23.2" />
+
+  <!-- Device tree -->
+  <project path="device/lenovo/asphalt"
+           name="android_device_lenovo_asphalt"
+           remote="lolipuru" />
+  <project path="device/lenovo/sm8475-common"
+           name="android_devlce_lenovo_sm8475-common"
+           remote="lolipuru" />
+
+  <!-- Kernel (built as part of the ROM build) -->
+  <project path="kernel/lenovo/sm8475"
+           name="kernel_lenovo_sm8475"
+           remote="lolipuru" />
+  <project path="kernel/lenovo/sm8475-devicetrees"
+           name="kernel_lenovo_sm8475-devicetrees"
+           remote="lolipuru" />
+  <project path="kernel/lenovo/sm8475-modules"
+           name="kernel_lenovo_sm8475-modules"
+           remote="lolipuru" />
+
+  <!--
+    test/cts-root ships two variants (32-bit and 64-bit) of
+    CtsBionicRootTestCases that both install to the same path, which makes
+    kati abort during the license/SBOM check with:
+      "cannot copy target from multiple modules: .../CtsBionicRootTestCases"
+    This module is CTS-only and irrelevant to building a flashable ROM,
+    so we just drop it from the tree. This is a generic AOSP issue, not
+    specific to this device.
+  -->
+  <remove-project name="platform/test/cts-root" />
+</manifest>
