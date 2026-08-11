@@ -25,10 +25,10 @@ limit. Reassemble before flashing:
 
 ```
 # Linux / WSL
-cat AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.part-* > AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
+cat AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.00.part AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.01.part > AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
 
 # Windows (cmd)
-copy /b AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.part-aa+AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.part-ab AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
+copy /b AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.00.part+AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.01.part AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
 ```
 
 Then check it against `SHA256SUMS.txt` before flashing.
