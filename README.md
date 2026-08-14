@@ -26,8 +26,9 @@
 
 ### 下载
 
-去 [Releases](../../releases) 页面下:刷机包(zip)、SHA256 校验和,以及
-单独打包的 `boot.img`(有一份是干净的,另一份已经预先打好了 Magisk 补丁)。
+去 [Releases](../../releases) 页面下:刷机包(zip)、单独提取出来的
+`recovery.img`(刷机第一步要用,见下面教程)、单独打包的 `boot.img`
+(有一份是干净的,另一份已经预先打好了 Magisk 补丁)、以及 SHA256 校验和。
 
 刷机包超过了 GitHub 单文件 2GB 的上限,所以分成了两卷,刷机前要先合并:
 
@@ -49,20 +50,24 @@ copy /b AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.00.part+AviumUI-16.2.
 LineageOS 没有区别。下面写得比较啰嗦,是想把每一步"应该看到什么"都说
 清楚,免得刷到一半心里没底。
 
+这个包本身就是完整的系统,**不需要事先装过别的系统再"升级"过来** ——
+不管你现在是联想原厂 ZUI,还是已经在跑 LineageOS/AviumUI,流程都一样:
+先用 fastboot 刷一次这个包自带的 Recovery,再用那个 Recovery 去 sideload
+整个包。
+
 #### 刷机前需要确认
 
-- [ ] **bootloader 已解锁**
-- [ ] **设备当前正跑着某个基于 LineageOS 23.2 的系统**(原版 LineageOS
-      23.2 或更早的 AviumUI 都行),这样它的 Recovery 才能识别并接受这个
-      包。如果你现在还是联想原厂 ZUI 系统,得先解锁 bootloader、刷上
-      LineageOS 23.2(具体做法参考 lolipuru 的设备树仓库或相关论坛帖),
-      走完这一步之后再回来刷本仓库这个包
+- [ ] **bootloader 已解锁**(这是唯一真正的前提条件,不管你现在跑的是
+      什么系统)
 - [ ] 电脑上装好了 **adb 和 fastboot**(Android SDK Platform Tools),
       命令行里能正常识别
 - [ ] **USB 数据线插在平板长边那个接口**(短边那个口不能用来传数据 /
-      刷机,插错了 `adb devices` 会看不到设备)
+      刷机,插错了 `adb devices` / `fastboot devices` 会看不到设备)
 - [ ] 电量至少 50%
 - [ ] 刷机包已经按上面的方法合并好、`SHA256SUMS.txt` 校验通过
+- [ ] 额外从 [Releases](../../releases) 下载 **`recovery.img`**(单独
+      打包好的,是从刷机包里原样提取出来的,用来在刷机前先让设备认得
+      这个包)
 
 关于机型:不管你这台是**国行还是全球版**,理论上都能刷 —— 我们自己那台
 就是国行渠道买的二手机。之前折腾原厂 ZUI 系统时确实撞过联想自己加的
@@ -72,69 +77,85 @@ LineageOS 没有区别。下面写得比较啰嗦,是想把每一步"应该看�
 
 #### 详细步骤
 
-1. **先备份数据**。下面第 3 步的 `Format data` 会清空 `/data` 分区 ——
+1. **先备份数据**。下面 Format data 那一步会清空 `/data` 分区 ——
    已安装的应用、应用内部数据、账号登录状态等全部清空。`/sdcard` 里的
    照片、下载文件等如果重要,建议先用 `adb pull` 导出一份。
 
-2. 电脑连好数据线后,先确认能识别到设备:
+2. 让设备进入 **fastboot(bootloader)模式**。如果当前系统已经开着
+   USB 调试,电脑上执行:
    ```bash
-   adb devices
+   adb reboot bootloader
    ```
-   应该能看到一行"序列号 + device"。如果显示 `unauthorized`,看一眼平板
-   屏幕,把弹出的 USB 调试授权对话框点"允许"。
+   如果不确定/USB 调试没开(比如设备现在还是原厂系统刚拿到手),用
+   **音量键 -(下) + 电源键**长按组合键强制进入。进去后电脑上确认能
+   识别到:
+   ```bash
+   fastboot devices
+   ```
+   应该能看到一行"序列号 + fastboot"。
 
-3. 让设备重启进 Recovery:
+3. 把刚下载的 `recovery.img` 刷进两个槽位(这台设备是 A/B 双系统,两个
+   槽都要刷一遍):
    ```bash
-   adb reboot recovery
+   fastboot flash recovery_a recovery.img
+   fastboot flash recovery_b recovery.img
    ```
-   平板会重启,进入一个 **LineageOS 风格的 Recovery 菜单**(黑底或白底,
-   顶部会写着当前系统的名字和版本号,比如 `Version 23.2` 或者
+
+4. 重启进入刚刷好的 Recovery:
+   ```bash
+   fastboot reboot recovery
+   ```
+   平板会进入一个 **AviumUI Recovery 菜单**(顶部写着
    `AviumUI Recovery Version 16.2.1`)。
 
-4. 在 Recovery 菜单里,用**音量键**上下移动光标、**电源键**确认,依次
+5. 在 Recovery 菜单里,用**音量键**上下移动光标、**电源键**确认,依次
    选择:**Factory reset → Format data / factory reset**,确认执行。
    屏幕会滚动出现类似
    `Wiping data... / Formatting /data... / Data wipe complete.`
    的文字,这是正常的,等它跑完。
 
-5. 返回 Recovery 主菜单,选择:**Apply update → Apply from ADB**。
+6. 返回 Recovery 主菜单,选择:**Apply update → Apply from ADB**。
    屏幕会显示类似
    `Now send the package you want to apply to the device with "adb sideload <filename>"...`
    —— 这说明设备已经在等待接收了。
 
-6. 回到电脑,在刷机包所在目录下执行:
+7. 回到电脑,在刷机包所在目录下执行:
    ```bash
    adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
    ```
    这个包 2GB+,传输大概要 5–8 分钟(具体看你的数据线和 USB 口速度),
    命令行会滚动显示百分比进度,类似 `serving: '...' (~50%)`。
 
-7. **⚠️ 有一个很容易让人虚惊一场的地方**:传输结束后,Recovery 屏幕上
+8. **⚠️ 有一个很容易让人虚惊一场的地方**:传输结束后,Recovery 屏幕上
    有时会**残留显示上一次尝试失败时留下的旧文字**,比如
    `Install completed with status 3. Installation aborted.`
    看着像是这次也失败了,但其实**这只是屏幕没刷新干净,显示的是过时
-   信息**。判断刷机到底成没成功,别看这行字,要看 **Recovery 菜单本身
-   有没有变化** —— 如果刷成功了,整个 Recovery 的主题、logo 都会变成
-   "AviumUI Recovery",顶部版本号会显示新的 `Version 16.2.1`。只要
-   看到这个变化,就说明其实已经装好了,可以放心继续往下刷。
+   信息**。判断刷机到底成没成功,可以重新进一次 **Apply update** 菜单
+   看它是不是已经不再提示"发送包",或者直接进第 9 步重启,系统能不能
+   正常进去才是最终判断标准。
 
-8. 回到 Recovery 主菜单,选择 **Reboot → System**,进入新系统。**首次
+9. 回到 Recovery 主菜单,选择 **Reboot → System**,进入新系统。**首次
    开机会明显比平时慢很多**(3–8 分钟内的转圈、黑屏都是正常现象,是在
    做首次的 dex 优化和 A/B 分区切换),这个阶段千万别断电或强制重启。
 
 #### 常见问题排查
 
-- **`adb devices` 看不到设备,或显示 `unauthorized`**:先确认数据线支持
-  数据传输(不是纯充电线),换个 USB 口试试(优先主板后置接口,避免
-  用前置面板或 USB Hub),然后看平板屏幕上是否有调试授权弹窗需要确认。
+- **`adb devices` / `fastboot devices` 看不到设备,或显示 `unauthorized`**:
+  先确认数据线支持数据传输(不是纯充电线),换个 USB 口试试(优先主板
+  后置接口,避免用前置面板或 USB Hub),然后看平板屏幕上是否有调试
+  授权弹窗需要确认。
 - **Recovery 里的英文菜单看不太懂**:标准操作方式是音量键上下移动光标、
   电源键确认,跟大多数 Android 官方 Recovery 一样。
-- **出现 `Install completed with status 3`**:大概率是第 7 步说的假警报,
-  别慌,先看 Recovery 的主题 / 版本号是不是已经变成新系统的样子。
+- **传输结束后出现 `Install completed with status 3` 之类的失败字样**:
+  先别急着重刷。这行字有时候是**上一次尝试残留在屏幕上、没刷新掉的旧
+  信息**,不代表这一次真的失败了。可以重新进一次 **Apply update →
+  Apply from ADB** 看提示是否正常,或者直接大胆进第 9 步重启 —— 系统
+  能不能正常开机,才是最终判断标准,比屏幕上这行字可靠得多。
 - **重启后卡在 logo 界面很久不动**:首次开机确实会比平时明显久,耐心
   等 5–10 分钟;如果超过 15 分钟屏幕还是一动不动,再考虑排查问题。
-- **想刷回原来的系统**:重新走一遍上面的流程,把 `adb sideload` 后面
-  换成你原来的那个刷机包文件名即可,和刷新包的操作完全一样。
+- **想刷回原来的系统**:如果原来的系统也是这种 payload.bin 格式的
+  sideload 包,重新走一遍上面第 5–9 步(不用再重新刷 recovery),
+  `adb sideload` 换成你原来那个包的文件名即可。
 
 ### 自己怎么编译
 
@@ -252,8 +273,10 @@ community/self build, not something the AviumUI team produced or endorses.
 
 ### Download
 
-See [Releases](../../releases) for the flashable zip, SHA256 checksum, and
-a standalone `boot.img` (with and without Magisk pre-patched).
+See [Releases](../../releases) for the flashable zip, a separately
+extracted `recovery.img` (needed for step 1 of flashing below), a
+standalone `boot.img` (with and without Magisk pre-patched), and the
+SHA256 checksums.
 
 The zip is split into two parts because it's over GitHub's 2 GB per-file
 limit. Reassemble before flashing:
@@ -274,21 +297,26 @@ Standard LineageOS-recovery-based A/B sideload flow. Written out in more
 detail than strictly necessary, so you know what you should be seeing at
 each step instead of just guessing whether it worked.
 
+This package is a complete, standalone system — **you don't need to have
+some other ROM already installed first.** Whether you're currently on
+stock ZUI or already on a LineageOS/AviumUI-based ROM, the process is the
+same: flash the recovery that ships inside this package via fastboot,
+then use that recovery to sideload the package itself.
+
 #### Before you start
 
-- [ ] **Unlocked bootloader**
-- [ ] **Device is already running something LineageOS 23.2-based** (stock
-      LineageOS 23.2 or an earlier AviumUI build both work) so its recovery
-      will actually accept this package. If you're still on stock ZUI,
-      unlock the bootloader and flash LineageOS 23.2 first (see lolipuru's
-      device tree repo / thread), then come back to this.
+- [ ] **Unlocked bootloader** (this is the only real prerequisite,
+      regardless of what's currently on the device)
 - [ ] **adb and fastboot installed** (Android SDK Platform Tools) and
       working from your PC's command line
 - [ ] **USB cable plugged into the port on the long edge of the tablet**
       (the short-edge port won't do data transfer / flashing — if
-      `adb devices` shows nothing, this is the first thing to check)
+      `adb devices`/`fastboot devices` shows nothing, this is the first
+      thing to check)
 - [ ] Battery at least 50%
 - [ ] The zip is reassembled and `SHA256SUMS.txt` checks out
+- [ ] You've also downloaded **`recovery.img`** from Releases (extracted
+      straight out of the flashable zip, used to bootstrap step 1 below)
 
 On region: this should work regardless of whether your unit is a China
 retail (国行) or global (ROW) unit — ours is a secondhand China-retail
@@ -300,75 +328,86 @@ anything like it again once on a LineageOS-based ROM.
 
 #### Step by step
 
-1. **Back up your data first.** Step 3 below (`Format data`) wipes
+1. **Back up your data first.** The `Format data` step below wipes
    `/data` — installed apps, app data, logged-in accounts, all of it.
    Pull anything you care about from `/sdcard` with `adb pull` first.
 
-2. With the cable connected, confirm the device shows up:
+2. Get the device into **fastboot (bootloader) mode**. If USB debugging
+   is already on for the current OS:
    ```bash
-   adb devices
+   adb reboot bootloader
    ```
-   You should see a serial number followed by `device`. If it says
-   `unauthorized`, check the tablet screen for a USB debugging
-   authorization prompt and accept it.
-
-3. Reboot into recovery:
+   Otherwise (e.g. fresh out of the box on stock ZUI), force it with a
+   **Volume Down + Power** long-press combo. Confirm the PC sees it:
    ```bash
-   adb reboot recovery
+   fastboot devices
    ```
-   The tablet reboots into a LineageOS-style recovery menu (black or white
-   background, with the current ROM name/version at the top, e.g.
-   `Version 23.2` or `AviumUI Recovery Version 16.2.1`).
+   You should see a serial number followed by `fastboot`.
 
-4. Using the volume keys to move and the power key to select:
+3. Flash `recovery.img` to both A/B slots (this device has dedicated
+   recovery partitions on each slot):
+   ```bash
+   fastboot flash recovery_a recovery.img
+   fastboot flash recovery_b recovery.img
+   ```
+
+4. Boot into the recovery you just flashed:
+   ```bash
+   fastboot reboot recovery
+   ```
+   The tablet boots into the **AviumUI Recovery** menu (header reads
+   `AviumUI Recovery Version 16.2.1`).
+
+5. Using the volume keys to move and the power key to select:
    **Factory reset → Format data / factory reset**, confirm. You'll see
    scrolling text like `Wiping data... / Formatting /data... / Data wipe
    complete.` — that's expected, let it finish.
 
-5. Back at the recovery main menu: **Apply update → Apply from ADB**.
+6. Back at the recovery main menu: **Apply update → Apply from ADB**.
    The screen will show something like
    `Now send the package you want to apply to the device with "adb sideload <filename>"...`
    — the device is now waiting to receive the package.
 
-6. From the directory containing the zip, on your PC:
+7. From the directory containing the zip, on your PC:
    ```bash
    adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
    ```
    The package is 2GB+, so this takes roughly 5–8 minutes depending on
    your cable/port. You'll see a scrolling percentage in the terminal.
 
-7. **⚠️ A false alarm worth knowing about ahead of time:** after the
+8. **⚠️ A false alarm worth knowing about ahead of time:** after the
    transfer finishes, the recovery screen sometimes still shows
    **leftover text from a previous failed attempt**, e.g.
    `Install completed with status 3. Installation aborted.`
    This looks like the install just failed, but it's often just **stale
-   text that never got redrawn**. Don't trust that line — check whether
-   the **recovery UI itself has changed**: if the flash actually
-   succeeded, the whole recovery theme/logo changes to "AviumUI Recovery"
-   and the version at the top updates to `Version 16.2.1`. If you see
-   that, it worked, and you can safely continue.
+   text that never got redrawn**. Don't panic — go back into
+   **Apply update → Apply from ADB** and see if it still looks like it's
+   waiting, or just go ahead to step 9 and reboot: whether the system
+   actually boots is the real test, far more reliable than that one line
+   of leftover text.
 
-8. Back at the main menu: **Reboot → System**. **First boot is noticeably
+9. Back at the main menu: **Reboot → System**. **First boot is noticeably
    slower than normal** (3–8 minutes of spinner/black screen is normal —
    it's doing first-run dex optimization and the A/B slot switch). Don't
    power off or force-reboot during this.
 
 #### Troubleshooting
 
-- **`adb devices` shows nothing / `unauthorized`**: make sure the cable
-  actually does data (not charge-only), try a different USB port
-  (rear motherboard port over front-panel/hub), and check the tablet for
-  a debugging authorization prompt.
+- **`adb devices`/`fastboot devices` shows nothing / `unauthorized`**:
+  make sure the cable actually does data (not charge-only), try a
+  different USB port (rear motherboard port over front-panel/hub), and
+  check the tablet for a debugging authorization prompt.
 - **Recovery menu is all in English and confusing**: volume keys move the
   cursor, power key selects — standard for most Android recoveries.
-- **You see `Install completed with status 3`**: probably the false alarm
-  from step 7 above — check the recovery theme/version before assuming
-  it failed.
+- **You see `Install completed with status 3`**: possibly the false alarm
+  from step 8 above — re-enter Apply from ADB, or just reboot and check
+  whether the system actually boots before assuming it failed.
 - **Stuck on the boot logo for a long time after rebooting**: first boot
   genuinely takes longer than usual; give it 5–10 minutes before you start
   worrying, and only start troubleshooting past ~15 minutes.
-- **Want to go back to your previous ROM**: repeat the same flow and
-  `adb sideload` your previous zip instead — identical process either way.
+- **Want to go back to your previous ROM**: if it's also a payload.bin
+  sideload package, repeat steps 5–9 (no need to reflash recovery) and
+  `adb sideload` your previous zip instead.
 
 ### Building it yourself
 
