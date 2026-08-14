@@ -210,33 +210,12 @@ AviumUI 是有 `avium-17` 这条 manifest 分支的,lolipuru 的 asphalt 设备�
 补丁跳过 bpfloader 的版本检测,这已经超出了设备侧能解决的范围。把这个
 结论记在这里,免得以后有人重复熬一整晚去查同一个问题。
 
-### 这个能提交给 AviumUI 官方吗?
+### 这是官方支持的设备吗?
 
-查了一下 AviumUI 官方公开的
-[设备与维护者准入政策](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md),
-老实说 —— **现在还不够格,但路是通的**,把关键几条摘出来:
-
-- **必须实际持有并长期使用这台设备**(这条我们满足)
-- **要有基础的代码阅读和自主排查问题的能力**(这次整个折腾过程也算是
-  证明了)
-- **必须先有一段"非官方维护期"**,原文写得很直白:「只交一次构建就马上
-  申请转正,不算是充分的维护经验」("Submitting a single build and
-  immediately applying for official status will not be considered
-  sufficient maintenance experience")—— 也就是说,**这个仓库现在这样
-  发一次版是不够的**,得持续跟进维护一段时间(修 bug、跟新版本、保持
-  更新)才有资格申请。
-- 一旦被正式收编,**对应的设备树仓库必须迁移托管到 AviumUI 官方的
-  GitHub 组织下**。但设备树和内核是 **lolipuru** 的心血,这件事怎么都
-  绕不开要先跟他打招呼、达成一致 —— 不会绕过原作者自己去申请。
-- 官方沟通(commit message、代码注释、技术讨论)**必须用英文**。
-- 官方正式版**不能预装 Magisk / KernelSU 等 root 方案**,这点本仓库
-  发的刷机包本来就是纯净的(Magisk 是可选的额外文件,不在 ROM 包里)。
-
-**现实的下一步**:先在这个仓库里持续发布 + 维护一段时间(这本身就是政策
-要求的"非官方维护期"),同时找机会联系一下 lolipuru,看他对设备树"官方
-收编"这件事是什么态度、要不要一起推进。真要往前走的话,联系渠道是
-AviumUI 的 [Telegram 群](https://t.me/AviumUI) 或者他们的
-[GitHub 组织](https://github.com/AviumUI)。
+不是,而且不会自动变成官方支持。AviumUI 对官方设备有自己的
+[准入政策](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md),
+`asphalt` 目前不在其中。也就是说这个 ROM **不会跟着官方走 OTA 更新**,
+后续版本都得从这个仓库的 Release 页面手动下载。
 
 ### 免责声明
 
@@ -460,40 +439,13 @@ the GSI build to skip the bpfloader version check, which is out of scope
 for a device-side fix. Leaving this here so nobody else burns a night on
 the same investigation.
 
-### Can this be submitted to AviumUI officially?
+### Is this an officially supported device?
 
-Checked AviumUI's public
-[Official Device and Maintainer Policy](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md).
-Short answer: **not yet, but there's a real path.** Key points from that
-policy:
-
-- **Maintainers must physically own and actively use the device** (true
-  for us)
-- **Basic code-reading and self-debugging ability** required (this whole
-  build/debug process is decent evidence of that)
-- **Prior unofficial maintenance experience is required.** Quoting
-  directly: "Submitting a single build and immediately applying for
-  official status will not be considered sufficient maintenance
-  experience." So this repo, as a one-off release, isn't enough on its
-  own — it needs to be maintained for a while (bugfixes, following new
-  releases, staying current) before applying makes sense.
-- **Once a device is approved, its device tree repo must be hosted under
-  the official AviumUI GitHub organization.** The device tree and kernel
-  here are [lolipuru](https://github.com/lolipuru)'s work, so this isn't
-  something to pursue without looping them in first — it's their call,
-  not something to route around them for.
-- Official commit messages/comments/discussion **must be in English**.
-- Official release builds **must not ship with Magisk/KernelSU
-  pre-integrated**, which this repo's ROM zip already satisfies (Magisk
-  is only an optional separate asset, not baked into the ROM).
-
-**Practical next step:** keep publishing and maintaining builds here for a
-while (which is effectively the "unofficial maintenance period" the
-policy asks for), and separately reach out to lolipuru about whether they
-want to pursue official adoption of the device tree. If/when that's
-worth pursuing further, the contact points are AviumUI's
-[Telegram](https://t.me/AviumUI) or their
-[GitHub org](https://github.com/AviumUI).
+No, and it won't become one automatically. AviumUI has its own
+[device/maintainer policy](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md),
+and `asphalt` isn't on that list. That means this build **won't receive
+official OTA updates** — future versions will always be a manual download
+from this repo's Releases page.
 
 ### Disclaimer
 
