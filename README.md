@@ -41,20 +41,95 @@ copy /b AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.00.part+AviumUI-16.2.
 ### 怎么刷
 
 标准的 LineageOS Recovery + A/B 无缝双系统 sideload 流程,和刷普通
-LineageOS 没有区别:
+LineageOS 没有区别。下面写得比较啰嗦,是想把每一步"应该看到什么"都说
+清楚,免得刷到一半心里没底。
 
-1. **先备份数据** —— 下面的 Format data 这一步会清空设备内部存储的所有内容
-2. 电脑上执行 `adb reboot recovery`,让设备重启进 Recovery
-3. Recovery 菜单里:**Factory reset → Format data / factory reset**
-4. 回到主菜单,选 **Apply update → Apply from ADB**
-5. 平板显示等待接收后,电脑上执行:
-   `adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip`
-6. 刷完选 **Reboot system**。首次开机会比较慢(3–8 分钟),转圈别慌,是正常现象
+#### 刷机前需要确认
 
-**前提条件**:设备的 bootloader 要已解锁,而且要已经在跑一个基于 LineageOS
-23.2 的系统(这样 Recovery 才认得这个包、才有能接受 sideload 的 Recovery)。
-如果你现在还是联想原厂 ZUI 系统,得先想办法刷上兼容 LineageOS/AviumUI 的
-Recovery —— 具体做法建议参考 lolipuru 的设备树仓库或相关论坛帖。
+- [ ] **bootloader 已解锁**
+- [ ] **设备当前正跑着某个基于 LineageOS 23.2 的系统**(原版 LineageOS
+      23.2 或更早的 AviumUI 都行),这样它的 Recovery 才能识别并接受这个
+      包。如果你现在还是联想原厂 ZUI 系统,得先解锁 bootloader、刷上
+      LineageOS 23.2(具体做法参考 lolipuru 的设备树仓库或相关论坛帖),
+      走完这一步之后再回来刷本仓库这个包
+- [ ] 电脑上装好了 **adb 和 fastboot**(Android SDK Platform Tools),
+      命令行里能正常识别
+- [ ] **USB 数据线插在平板长边那个接口**(短边那个口不能用来传数据 /
+      刷机,插错了 `adb devices` 会看不到设备)
+- [ ] 电量至少 50%
+- [ ] 刷机包已经按上面的方法合并好、`SHA256SUMS.txt` 校验通过
+
+关于机型:不管你这台是**国行还是全球版**,理论上都能刷 —— 我们自己那台
+就是国行渠道买的二手机。之前折腾原厂 ZUI 系统时确实撞过联想自己加的
+"区域校验"红字报错,但那是联想 ZUI 系统固件里专有的检查逻辑;LineageOS
+系(以及基于它的 AviumUI)用的 `vendor_boot` 是完全独立编译出来的开源版本,
+不含联想那段专有代码,实测流程里也确实再没遇到过这类问题。
+
+#### 详细步骤
+
+1. **先备份数据**。下面第 3 步的 `Format data` 会清空 `/data` 分区 ——
+   已安装的应用、应用内部数据、账号登录状态等全部清空。`/sdcard` 里的
+   照片、下载文件等如果重要,建议先用 `adb pull` 导出一份。
+
+2. 电脑连好数据线后,先确认能识别到设备:
+   ```bash
+   adb devices
+   ```
+   应该能看到一行"序列号 + device"。如果显示 `unauthorized`,看一眼平板
+   屏幕,把弹出的 USB 调试授权对话框点"允许"。
+
+3. 让设备重启进 Recovery:
+   ```bash
+   adb reboot recovery
+   ```
+   平板会重启,进入一个 **LineageOS 风格的 Recovery 菜单**(黑底或白底,
+   顶部会写着当前系统的名字和版本号,比如 `Version 23.2` 或者
+   `AviumUI Recovery Version 16.2.1`)。
+
+4. 在 Recovery 菜单里,用**音量键**上下移动光标、**电源键**确认,依次
+   选择:**Factory reset → Format data / factory reset**,确认执行。
+   屏幕会滚动出现类似
+   `Wiping data... / Formatting /data... / Data wipe complete.`
+   的文字,这是正常的,等它跑完。
+
+5. 返回 Recovery 主菜单,选择:**Apply update → Apply from ADB**。
+   屏幕会显示类似
+   `Now send the package you want to apply to the device with "adb sideload <filename>"...`
+   —— 这说明设备已经在等待接收了。
+
+6. 回到电脑,在刷机包所在目录下执行:
+   ```bash
+   adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
+   ```
+   这个包 2GB+,传输大概要 5–8 分钟(具体看你的数据线和 USB 口速度),
+   命令行会滚动显示百分比进度,类似 `serving: '...' (~50%)`。
+
+7. **⚠️ 有一个很容易让人虚惊一场的地方**:传输结束后,Recovery 屏幕上
+   有时会**残留显示上一次尝试失败时留下的旧文字**,比如
+   `Install completed with status 3. Installation aborted.`
+   看着像是这次也失败了,但其实**这只是屏幕没刷新干净,显示的是过时
+   信息**。判断刷机到底成没成功,别看这行字,要看 **Recovery 菜单本身
+   有没有变化** —— 如果刷成功了,整个 Recovery 的主题、logo 都会变成
+   "AviumUI Recovery",顶部版本号会显示新的 `Version 16.2.1`。只要
+   看到这个变化,就说明其实已经装好了,可以放心继续往下刷。
+
+8. 回到 Recovery 主菜单,选择 **Reboot → System**,进入新系统。**首次
+   开机会明显比平时慢很多**(3–8 分钟内的转圈、黑屏都是正常现象,是在
+   做首次的 dex 优化和 A/B 分区切换),这个阶段千万别断电或强制重启。
+
+#### 常见问题排查
+
+- **`adb devices` 看不到设备,或显示 `unauthorized`**:先确认数据线支持
+  数据传输(不是纯充电线),换个 USB 口试试(优先主板后置接口,避免
+  用前置面板或 USB Hub),然后看平板屏幕上是否有调试授权弹窗需要确认。
+- **Recovery 里的英文菜单看不太懂**:标准操作方式是音量键上下移动光标、
+  电源键确认,跟大多数 Android 官方 Recovery 一样。
+- **出现 `Install completed with status 3`**:大概率是第 7 步说的假警报,
+  别慌,先看 Recovery 的主题 / 版本号是不是已经变成新系统的样子。
+- **重启后卡在 logo 界面很久不动**:首次开机确实会比平时明显久,耐心
+  等 5–10 分钟;如果超过 15 分钟屏幕还是一动不动,再考虑排查问题。
+- **想刷回原来的系统**:重新走一遍上面的流程,把 `adb sideload` 后面
+  换成你原来的那个刷机包文件名即可,和刷新包的操作完全一样。
 
 ### 自己怎么编译
 
@@ -109,6 +184,34 @@ AviumUI 是有 `avium-17` 这条 manifest 分支的,lolipuru 的 asphalt 设备�
 补丁跳过 bpfloader 的版本检测,这已经超出了设备侧能解决的范围。把这个
 结论记在这里,免得以后有人重复熬一整晚去查同一个问题。
 
+### 这个能提交给 AviumUI 官方吗?
+
+查了一下 AviumUI 官方公开的
+[设备与维护者准入政策](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md),
+老实说 —— **现在还不够格,但路是通的**,把关键几条摘出来:
+
+- **必须实际持有并长期使用这台设备**(这条我们满足)
+- **要有基础的代码阅读和自主排查问题的能力**(这次整个折腾过程也算是
+  证明了)
+- **必须先有一段"非官方维护期"**,原文写得很直白:「只交一次构建就马上
+  申请转正,不算是充分的维护经验」("Submitting a single build and
+  immediately applying for official status will not be considered
+  sufficient maintenance experience")—— 也就是说,**这个仓库现在这样
+  发一次版是不够的**,得持续跟进维护一段时间(修 bug、跟新版本、保持
+  更新)才有资格申请。
+- 一旦被正式收编,**对应的设备树仓库必须迁移托管到 AviumUI 官方的
+  GitHub 组织下**。但设备树和内核是 **lolipuru** 的心血,这件事怎么都
+  绕不开要先跟他打招呼、达成一致 —— 不会绕过原作者自己去申请。
+- 官方沟通(commit message、代码注释、技术讨论)**必须用英文**。
+- 官方正式版**不能预装 Magisk / KernelSU 等 root 方案**,这点本仓库
+  发的刷机包本来就是纯净的(Magisk 是可选的额外文件,不在 ROM 包里)。
+
+**现实的下一步**:先在这个仓库里持续发布 + 维护一段时间(这本身就是政策
+要求的"非官方维护期"),同时找机会联系一下 lolipuru,看他对设备树"官方
+收编"这件事是什么态度、要不要一起推进。真要往前走的话,联系渠道是
+AviumUI 的 [Telegram 群](https://t.me/AviumUI) 或者他们的
+[GitHub 组织](https://github.com/AviumUI)。
+
 ### 免责声明
 
 这是非官方的社区构建,**与 AviumUI、LineageOS 项目,联想公司,或
@@ -156,19 +259,105 @@ Then check it against `SHA256SUMS.txt` before flashing.
 
 ### Flashing
 
-Standard LineageOS-recovery-based A/B sideload flow:
+Standard LineageOS-recovery-based A/B sideload flow. Written out in more
+detail than strictly necessary, so you know what you should be seeing at
+each step instead of just guessing whether it worked.
 
-1. Back up your data — the `Format data` step below wipes internal storage.
-2. `adb reboot recovery`
-3. In the recovery menu: **Factory reset → Format data / factory reset**
-4. **Apply update → Apply from ADB**
-5. On your PC: `adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip`
-6. **Reboot system** when done. First boot is slow (3–8 min), that's normal.
+#### Before you start
 
-You need an unlocked bootloader and a device already running a LineageOS
-23.2-based ROM for this device (so the recovery can accept the package).
-If you're coming from stock ZUI, flash a LineageOS/AviumUI-compatible
-recovery first — see lolipuru's tree/thread for that.
+- [ ] **Unlocked bootloader**
+- [ ] **Device is already running something LineageOS 23.2-based** (stock
+      LineageOS 23.2 or an earlier AviumUI build both work) so its recovery
+      will actually accept this package. If you're still on stock ZUI,
+      unlock the bootloader and flash LineageOS 23.2 first (see lolipuru's
+      device tree repo / thread), then come back to this.
+- [ ] **adb and fastboot installed** (Android SDK Platform Tools) and
+      working from your PC's command line
+- [ ] **USB cable plugged into the port on the long edge of the tablet**
+      (the short-edge port won't do data transfer / flashing — if
+      `adb devices` shows nothing, this is the first thing to check)
+- [ ] Battery at least 50%
+- [ ] The zip is reassembled and `SHA256SUMS.txt` checks out
+
+On region: this should work regardless of whether your unit is a China
+retail (国行) or global (ROW) unit — ours is a secondhand China-retail
+unit. We did hit Lenovo's own region-check red screen while messing with
+stock ZUI firmware earlier, but that check lives in Lenovo's proprietary
+firmware; the LineageOS-family `vendor_boot` (which AviumUI is built on)
+is compiled from scratch and doesn't carry that code, and we never saw
+anything like it again once on a LineageOS-based ROM.
+
+#### Step by step
+
+1. **Back up your data first.** Step 3 below (`Format data`) wipes
+   `/data` — installed apps, app data, logged-in accounts, all of it.
+   Pull anything you care about from `/sdcard` with `adb pull` first.
+
+2. With the cable connected, confirm the device shows up:
+   ```bash
+   adb devices
+   ```
+   You should see a serial number followed by `device`. If it says
+   `unauthorized`, check the tablet screen for a USB debugging
+   authorization prompt and accept it.
+
+3. Reboot into recovery:
+   ```bash
+   adb reboot recovery
+   ```
+   The tablet reboots into a LineageOS-style recovery menu (black or white
+   background, with the current ROM name/version at the top, e.g.
+   `Version 23.2` or `AviumUI Recovery Version 16.2.1`).
+
+4. Using the volume keys to move and the power key to select:
+   **Factory reset → Format data / factory reset**, confirm. You'll see
+   scrolling text like `Wiping data... / Formatting /data... / Data wipe
+   complete.` — that's expected, let it finish.
+
+5. Back at the recovery main menu: **Apply update → Apply from ADB**.
+   The screen will show something like
+   `Now send the package you want to apply to the device with "adb sideload <filename>"...`
+   — the device is now waiting to receive the package.
+
+6. From the directory containing the zip, on your PC:
+   ```bash
+   adb sideload AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip
+   ```
+   The package is 2GB+, so this takes roughly 5–8 minutes depending on
+   your cable/port. You'll see a scrolling percentage in the terminal.
+
+7. **⚠️ A false alarm worth knowing about ahead of time:** after the
+   transfer finishes, the recovery screen sometimes still shows
+   **leftover text from a previous failed attempt**, e.g.
+   `Install completed with status 3. Installation aborted.`
+   This looks like the install just failed, but it's often just **stale
+   text that never got redrawn**. Don't trust that line — check whether
+   the **recovery UI itself has changed**: if the flash actually
+   succeeded, the whole recovery theme/logo changes to "AviumUI Recovery"
+   and the version at the top updates to `Version 16.2.1`. If you see
+   that, it worked, and you can safely continue.
+
+8. Back at the main menu: **Reboot → System**. **First boot is noticeably
+   slower than normal** (3–8 minutes of spinner/black screen is normal —
+   it's doing first-run dex optimization and the A/B slot switch). Don't
+   power off or force-reboot during this.
+
+#### Troubleshooting
+
+- **`adb devices` shows nothing / `unauthorized`**: make sure the cable
+  actually does data (not charge-only), try a different USB port
+  (rear motherboard port over front-panel/hub), and check the tablet for
+  a debugging authorization prompt.
+- **Recovery menu is all in English and confusing**: volume keys move the
+  cursor, power key selects — standard for most Android recoveries.
+- **You see `Install completed with status 3`**: probably the false alarm
+  from step 7 above — check the recovery theme/version before assuming
+  it failed.
+- **Stuck on the boot logo for a long time after rebooting**: first boot
+  genuinely takes longer than usual; give it 5–10 minutes before you start
+  worrying, and only start troubleshooting past ~15 minutes.
+- **Want to go back to your previous ROM**: repeat the same flow and
+  `adb sideload` your previous zip instead — identical process either way.
 
 ### Building it yourself
 
@@ -220,6 +409,41 @@ issue several other devices have hit; the usual community fix is patching
 the GSI build to skip the bpfloader version check, which is out of scope
 for a device-side fix. Leaving this here so nobody else burns a night on
 the same investigation.
+
+### Can this be submitted to AviumUI officially?
+
+Checked AviumUI's public
+[Official Device and Maintainer Policy](https://github.com/AviumUI-Devices/official_devices/blob/main/README.md).
+Short answer: **not yet, but there's a real path.** Key points from that
+policy:
+
+- **Maintainers must physically own and actively use the device** (true
+  for us)
+- **Basic code-reading and self-debugging ability** required (this whole
+  build/debug process is decent evidence of that)
+- **Prior unofficial maintenance experience is required.** Quoting
+  directly: "Submitting a single build and immediately applying for
+  official status will not be considered sufficient maintenance
+  experience." So this repo, as a one-off release, isn't enough on its
+  own — it needs to be maintained for a while (bugfixes, following new
+  releases, staying current) before applying makes sense.
+- **Once a device is approved, its device tree repo must be hosted under
+  the official AviumUI GitHub organization.** The device tree and kernel
+  here are [lolipuru](https://github.com/lolipuru)'s work, so this isn't
+  something to pursue without looping them in first — it's their call,
+  not something to route around them for.
+- Official commit messages/comments/discussion **must be in English**.
+- Official release builds **must not ship with Magisk/KernelSU
+  pre-integrated**, which this repo's ROM zip already satisfies (Magisk
+  is only an optional separate asset, not baked into the ROM).
+
+**Practical next step:** keep publishing and maintaining builds here for a
+while (which is effectively the "unofficial maintenance period" the
+policy asks for), and separately reach out to lolipuru about whether they
+want to pursue official adoption of the device tree. If/when that's
+worth pursuing further, the contact points are AviumUI's
+[Telegram](https://t.me/AviumUI) or their
+[GitHub org](https://github.com/AviumUI).
 
 ### Disclaimer
 
