@@ -15,9 +15,14 @@
   LineageOS 的内核默认不开这个,想在设备上跑 `bpftool` 之类的 eBPF 追踪工具
   就需要它
 - **设备树和内核完全来自** [**lolipuru**](https://github.com/lolipuru) 的
-  LineageOS 23.2 工作成果。这个仓库本身只是一份 repo manifest 加几个编译
-  脚本,负责把源码正确地拼到一起编出来 —— **能让这台设备真正跑起来的功劳
-  全部归功于 lolipuru**,这里不敢掠美。
+  LineageOS 23.2 工作成果(GitHub 上能查到的提交记录里,设备树仓库从
+  2025-07-14 的初始骨架开始就是他一路写起来的,提交量遥遥领先其他贡献者)。
+  这个仓库本身只是一份 repo manifest 加几个编译脚本,负责把源码正确地
+  拼到一起编出来。另外,这台设备最早的社区适配 / 内核与 HAL 源码这块,
+  按流传的 LineageOS 23.2 非官方构建帖里的致谢,还要感谢 **mickey36736**
+  (设备适配)和 **soralis0912**(内核与 HAL 源码,GitHub 上确实有他做过
+  的联想相关逆向工具)—— **这台设备能跑起来,是这几位一起的功劳**,这里
+  不敢掠美。
 
 ### 下载
 
@@ -235,9 +240,15 @@ community/self build, not something the AviumUI team produced or endorses.
   for this device does not enable this — it's needed if you want to run
   `bpftool`/eBPF-based tracing on-device)
 - **Device tree / kernel:** all device support comes from
-  [lolipuru](https://github.com/lolipuru)'s LineageOS 23.2 trees — this repo
-  is only a manifest + build script pointing at that work. Full credit for
-  making this device bootable at all goes to them.
+  [lolipuru](https://github.com/lolipuru)'s LineageOS 23.2 trees (their
+  commit history shows they've been the primary author since the initial
+  skeleton on 2025-07-14, by a wide margin over any other contributor) —
+  this repo is only a manifest + build script pointing at that work.
+  The earliest community bring-up of this device also credits
+  **mickey36736** (device) and **soralis0912** (kernel/HAL source —
+  who does have public Lenovo-related reverse-engineering work on
+  GitHub) per the original unofficial LineageOS 23.2 build thread. Full
+  credit for making this device bootable at all goes to all of them.
 
 ### Download
 
