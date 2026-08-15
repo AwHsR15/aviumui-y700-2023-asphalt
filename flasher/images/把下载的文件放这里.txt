@@ -1,0 +1,14 @@
+把从 Release 页面下载的文件放进这个文件夹:
+
+    AviumUI-16.2.1-asphalt-*.zip.00.part    刷机包分卷 1(必需)
+    AviumUI-16.2.1-asphalt-*.zip.01.part    刷机包分卷 2(必需)
+    recovery.img                             必需
+    SHA256SUMS.txt                           建议(用来校验文件完整性)
+
+    boot.img                                 可选,用于去掉 root
+    boot_magisk.img                          可选,用于获取 root
+    super_empty.img                          可选,用于修复 status 7 报错
+
+两个 .part 分卷不需要自己合并,脚本会自动处理。
+
+放好之后,回到上一层目录双击运行【一键刷机.bat】。

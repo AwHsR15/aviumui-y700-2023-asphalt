@@ -46,14 +46,43 @@ copy /b AviumUI-16.2.1-asphalt-20260802-Unofficial-GMS.zip.00.part+AviumUI-16.2.
 
 ### 怎么刷
 
-标准的 LineageOS Recovery + A/B 无缝双系统 sideload 流程,和刷普通
-LineageOS 没有区别。下面写得比较啰嗦,是想把每一步"应该看到什么"都说
-清楚,免得刷到一半心里没底。
+有两种方式,**推荐用一键脚本**,手动流程留在下面供参考和排查用。
 
 这个包本身就是完整的系统,**不需要事先装过别的系统再"升级"过来** ——
 不管你现在是联想原厂 ZUI,还是已经在跑 LineageOS/AviumUI,流程都一样:
 先用 fastboot 刷一次这个包自带的 Recovery,再用那个 Recovery 去 sideload
 整个包。
+
+#### 方式一:一键脚本(推荐)
+
+仓库里的 [`flasher/`](flasher/) 文件夹是一个 Windows 一键刷机工具,
+下载整个文件夹后:
+
+1. 把 Release 里下载的文件丢进 `flasher/images/`(分卷不用自己合并)
+2. 平板打开 USB 调试,用数据线接电脑(**必须插长边那个口**)
+3. 双击 `一键刷机.bat`,按提示走
+
+脚本会自动处理这些事:
+
+- 缺 adb / fastboot 会自动从 Google 官方下载,不需要另外装 Android SDK
+  (国内网络可能需要代理,下不动的话说明里有手动方案)
+- 自动合并 `.00.part` / `.01.part` 分卷,合并前先检查磁盘空间够不够
+- 校验 SHA256,防止下载损坏导致刷到一半失败
+- **校验机型** —— 确认连的确实是 Y700 2023 才继续,防止手滑刷错设备
+- 检查 bootloader 解锁状态、电量
+- 自动识别设备当前在哪种模式(系统 / Recovery / sideload / fastboot)
+- 自动识别 A/B 活动槽位,刷 boot 时刷到对的槽
+- 出错时给出具体的排查建议,并把完整日志存成文件方便反馈
+
+除了完整刷机,菜单里还有单独刷 boot(装/去 root)、重置 super 分区
+(修 status 7)、以及只做检查不写入的选项。
+
+详细说明见 [`flasher/使用说明.txt`](flasher/使用说明.txt)。
+
+#### 方式二:手动操作
+
+如果你更想清楚每一步在干什么,或者一键脚本在你机器上跑不起来,
+可以照下面的步骤手动来。这也是脚本内部实际执行的流程。
 
 #### 刷机前需要确认
 
@@ -272,15 +301,56 @@ Then check it against `SHA256SUMS.txt` before flashing.
 
 ### Flashing
 
-Standard LineageOS-recovery-based A/B sideload flow. Written out in more
-detail than strictly necessary, so you know what you should be seeing at
-each step instead of just guessing whether it worked.
+Two options — **the one-click script is recommended**; the manual steps
+are kept below for reference and troubleshooting.
 
 This package is a complete, standalone system — **you don't need to have
 some other ROM already installed first.** Whether you're currently on
 stock ZUI or already on a LineageOS/AviumUI-based ROM, the process is the
 same: flash the recovery that ships inside this package via fastboot,
 then use that recovery to sideload the package itself.
+
+#### Option 1: one-click script (recommended)
+
+The [`flasher/`](flasher/) folder contains a Windows one-click flashing
+tool. Download the whole folder, then:
+
+1. Drop the files from Releases into `flasher/images/` (no need to merge
+   the split parts yourself)
+2. Enable USB debugging, connect the tablet (**use the port on the long
+   edge** — the short-edge port can't be used for flashing)
+3. Double-click `一键刷机.bat` and follow the prompts
+
+It handles:
+
+- Downloads adb/fastboot from Google automatically if they're missing, so
+  no separate Android SDK install needed (it's not bundled in the repo —
+  that's Google's Platform Tools, with its own license)
+- Auto-merging the `.00.part` / `.01.part` split archive, with a free-space
+  check first
+- SHA256 verification, so a corrupted download fails early instead of
+  halfway through flashing
+- **Device model verification** — refuses to proceed unless it's actually
+  a Y700 2023, so you can't accidentally flash the wrong device
+- Bootloader unlock state and battery level checks
+- Auto-detecting which mode the device is currently in (system / recovery
+  / sideload / fastboot)
+- Auto-detecting the active A/B slot when flashing boot images
+- Specific troubleshooting hints on failure, plus a full log file you can
+  attach to a bug report
+
+Besides a full flash, the menu also offers flashing boot images alone
+(add/remove root), resetting the super partition (fixes status 7), and a
+check-only mode that writes nothing.
+
+The script's UI is in Chinese; see [`flasher/使用说明.txt`](flasher/使用说明.txt).
+If you'd prefer an English version, open an issue and I'll add one.
+
+#### Option 2: manual steps
+
+If you'd rather see exactly what's happening, or the script doesn't work
+on your machine, follow the steps below — this is what the script does
+internally anyway.
 
 #### Before you start
 
